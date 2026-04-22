@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBX Magnet Prompts</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Courier+Prime:wght@400;700&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+ --ink: #1a1208;
+ --sand: #c8a96e;
+ --cream: #f5eedc;
+ --rust: #b84c1e;
+ --fog: #8aa8b8;
+ --aged: #e8dfc8;
+ --marsh: #4a6741;
+ --water: #2e5f7a;
+ --highlight: #d4891a;
+}
+
+body {
+ background: var(--ink);
+ font-family: 'Courier Prime', monospace;
+ color: var(--cream);
+ padding: 1.25rem 0.75rem;
+ min-height: 100vh;
+}
+
+.wrap { max-width: 860px; margin: 0 auto; }
+
+/* HEADER */
+.hdr { text-align: center; margin-bottom: 2rem; }
+.hdr::before, .hdr::after {
+ content: ''; display: block; height: 3px;
+ background: linear-gradient(90deg, transparent, var(--sand), var(--rust), var(--sand), transparent);
+}
+.hdr::before { margin-bottom: 1.25rem; }
+.hdr::after { margin-top: 1.25rem; }
+.hdr-sub { font-family: 'Oswald', sans-serif; font-size: 0.75rem; letter-spacing: 0.25em; color: var(--sand); text-transform: uppercase; margin-bottom: 0.5rem; }
+.hdr h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem,6vw,3rem); font-weight: 900; color: var(--cream); line-height: 1.1; text-shadow: 1px 1px 0 var(--rust); }
+.hdr h1 span { color: var(--sand); }
+.hdr-tag { font-size: 0.8rem; color: var(--fog); margin-top: 0.5rem; letter-spacing: 0.08em; }
+.vbadge { background: var(--rust); color: var(--cream); font-family: 'Oswald', sans-serif; font-size: 0.65rem; letter-spacing: 0.15em; padding: 0.15rem 0.5rem; border-radius: 2px; vertical-align: middle; }
+
+/* PANEL */
+.panel { background: var(--aged); border-radius: 6px; border: 2px solid var(--sand); padding: 1.1rem; margin-bottom: 1.1rem; color: var(--ink); box-shadow: 4px 4px 0 rgba(0,0,0,0.4); }
+.ptitle { font-family: 'Oswald', sans-serif; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rust); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+.ptitle::after { content: ''; flex: 1; height: 1px; background: var(--rust); opacity: 0.4; }
+.slabel { font-family: 'Oswald', sans-serif; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.5rem; }
+
+/* GRIDS */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.6rem; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.6rem; }
+.gs { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.6rem; }
+.gx { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.6rem; }
+
+/* ALL INTERACTIVE BUTTONS - no global button reset that fights specificity */
+.btn-subject, .btn-style, .btn-shape, .btn-extra {
+ display: block;
+ width: 100%;
+ font-family: 'Courier Prime', monospace;
+ font-size: clamp(0.78rem,2.8vw,0.85rem);
+ color: var(--ink);
+ background: transparent;
+ border: 1.5px solid var(--ink);
+ border-radius: 4px;
+ padding: 0.6rem;
+ min-height: 48px;
+ text-align: left;
+ line-height: 1.3;
+ cursor: pointer;
+ -webkit-tap-highlight-color: transparent;
+ touch-action: manipulation;
+ -webkit-appearance: none;
+ appearance: none;
+}
+.btn-subject { display: flex; align-items: center; gap: 0.4rem; }
+.btn-extra { display: flex; align-items: center; gap: 0.5rem; }
+.btn-shape { text-align: center; min-height: 56px; font-size: clamp(0.7rem,2.5vw,0.78rem); line-height: 1.4; }
+.btn-style { padding: 0.75rem; }
+
+.btn-subject.on, .btn-style.on, .btn-shape.on, .btn-extra.on {
+ background: var(--rust) !important;
+ color: var(--cream) !important;
+ border-color: var(--rust) !important;
+ box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+}
+
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; flex-shrink: 0; display: inline-block; }
+.btn-subject.on .dot { background: var(--cream); border-color: var(--cream); }
+
+.sname { font-family: 'Oswald', sans-serif; font-size: clamp(0.8rem,2.8vw,0.9rem); font-weight: 600; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem; }
+.sdesc { font-size: clamp(0.68rem,2.2vw,0.72rem); opacity: 0.75; line-height: 1.4; display: block; }
+
+.cbox { width: 16px; height: 16px; border: 2px solid currentColor; border-radius: 3px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+
+/* Generate Prompt */
+.gen-btn {
+ display: block; width: 100%;
+ background: var(--rust); color: var(--cream);
+ border: none; border-radius: 4px;
+ padding: 1rem; min-height: 54px;
+ font-family: 'Oswald', sans-serif; font-size: clamp(0.95rem,3.5vw,1.1rem);
+ font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+ box-shadow: 4px 4px 0 rgba(0,0,0,0.35); margin-bottom: 1.25rem;
+ cursor: pointer; -webkit-appearance: none; appearance: none; touch-action: manipulation;
+}
+.gen-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
+
+/* OUTPUT */
+.out { background: var(--ink); border: 2px solid var(--sand); border-radius: 6px; padding: 1.1rem; display: none; box-shadow: 4px 4px 0 rgba(0,0,0,0.5); }
+.out.show { display: block; }
+.out-lbl { font-family: 'Oswald', sans-serif; font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--sand); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.out-lbl::after { content: ''; flex: 1; height: 1px; background: var(--sand); opacity: 0.3; }
+.badge { display: inline-block; background: var(--rust); color: var(--cream); font-family: 'Oswald', sans-serif; font-size: 0.68rem; letter-spacing: 0.1em; padding: 0.2rem 0.6rem; border-radius: 2px; text-transform: uppercase; word-break: break-word; }
+.ptext { font-family: 'Courier Prime', monospace; font-size: clamp(0.8rem,2.8vw,0.88rem); line-height: 1.75; color: var(--cream); white-space: pre-wrap; word-break: break-word; }
+.out-actions { display: flex; gap: 0.6rem; margin-top: 1.25rem; flex-wrap: wrap; }
+.abtn {
+ background: transparent; border: 1.5px solid var(--sand); color: var(--sand);
+ border-radius: 4px; padding: 0.65rem 1rem; min-height: 44px;
+ font-family: 'Oswald', sans-serif; font-size: clamp(0.72rem,2.5vw,0.78rem);
+ letter-spacing: 0.12em; text-transform: uppercase; flex: 1; min-width: 100px;
+ text-align: center; cursor: pointer; -webkit-appearance: none; appearance: none; touch-action: manipulation;
+}
+.abtn:active { background: var(--sand); color: var(--ink); }
+.cc { font-family: 'Oswald', sans-serif; font-size: 0.68rem; letter-spacing: 0.1em; padding: 0.25rem 0.6rem; border-radius: 2px; font-weight: 600; white-space: nowrap; }
+.cc.ok { background: rgba(74,103,65,0.4); color: #a8d4a0; }
+.cc.warn { background: rgba(212,137,26,0.4); color: #f0c060; }
+.cc.over { background: rgba(184,76,30,0.5); color: #ffaaaa; }
+.neg-sec { margin-top: 1.25rem; border-top: 1px solid rgba(200,169,110,0.2); padding-top: 1rem; }
+.neg-lbl { font-family: 'Oswald', sans-serif; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--fog); margin-bottom: 0.5rem; }
+.neg-txt { font-family: 'Courier Prime', monospace; font-size: clamp(0.72rem,2.5vw,0.78rem); color: var(--fog); line-height: 1.6; word-break: break-word; }
+
+/* FOOTER */
+.footer { text-align: center; margin-top: 2rem; margin-bottom: 1rem; font-size: 0.72rem; color: rgba(200,169,110,0.85); letter-spacing: 0.12em; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.dl-btn {
+ background: var(--rust); color: var(--cream); border: none;
+ font-family: 'Oswald', sans-serif; font-size: 0.8rem; letter-spacing: 0.15em;
+ text-transform: uppercase; padding: 0.6rem 1.4rem; border-radius: 4px;
+ box-shadow: 3px 3px 0 rgba(0,0,0,0.3); min-height: 44px;
+ cursor: pointer; -webkit-appearance: none; appearance: none; touch-action: manipulation;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+ .g3 { grid-template-columns: 1fr 1fr; }
+ .g4 { grid-template-columns: 1fr 1fr; }
+ .gs { grid-template-columns: 1fr; }
+ .gx { grid-template-columns: 1fr; }
+ .out-actions { flex-direction: column; }
+ .abtn { width: 100%; }
+}
+@media (max-width: 400px) {
+ .g2 { grid-template-columns: 1fr; }
+ .g3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+ <div class="hdr">
+ <div class="hdr-sub">Core Sound - Harkers Island - Cape Lookout</div>
+ <h1>Retro Magnet<br><span>Prompt Generator</span></h1>
+ <div class="hdr-tag">Saltwater Fish &amp; Waterfowl - AI Image Prompt Builder &nbsp;<span class="vbadge" id="vbadge">V30</span></div>
+ </div>
+
+ <div class="panel">
+ <div class="ptitle">1. Select Species</div>
+ <div class="slabel" style="color:var(--water);">Saltwater Fish </div>
+ <div class="g3" id="fish-grid"></div>
+ <div class="slabel" style="color:var(--marsh);margin-top:1rem;">Waterfowl &amp; Shorebirds </div>
+ <div class="g3" id="bird-grid"></div>
+ </div>
+
+ <div class="panel">
+ <div class="ptitle">- or - Points of Interest &amp; Landmarks</div>
+ <div class="slabel" style="color:var(--highlight);">Cape Lookout - Outer Banks - Crystal Coast </div>
+ <div class="g2" id="landmark-grid"></div>
+ </div>
+
+ <div class="panel">
+ <div class="ptitle">2. Choose Art Style</div>
+ <div class="gs" id="style-grid"></div>
+ </div>
+
+ <div class="panel">
+ <div class="ptitle">3. Magnet Shape &amp; Format</div>
+ <div class="g4" id="shape-grid"></div>
+ </div>
+
+ <div class="panel">
+ <div class="ptitle">4. Optional Details</div>
+ <div class="gx" id="extras-grid"></div>
+ </div>
+
+ <button class="gen-btn" id="gen-btn">Generate Prompt</button>
+
+ <div class="out" id="out-panel">
+ <div class="out-lbl">Generated Prompt</div>
+ <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+ <div class="badge" id="out-badge">-</div>
+ <div class="cc" id="out-cc"></div>
+ </div>
+ <div class="ptext" id="out-text"></div>
+ <div class="neg-sec">
+ <div class="neg-lbl">Negative Prompt</div>
+ <div class="neg-txt" id="neg-text"></div>
+ </div>
+ <div class="out-actions">
+ <button class="abtn" id="btn-copy-p">Copy Prompt</button>
+ <button class="abtn" id="btn-copy-n">Copy Negative</button>
+ <button class="abtn" id="btn-regen">Regenerate</button>
+ </div>
+ </div>
+
+ <div class="footer">
+ <span>OBX Custom Works - Magnet Series - <span id="footer-v">V30</span></span>
+ <span style="font-size:0.62rem;color:rgba(200,169,110,0.6);">(c) 2025 OBX Custom Works - All Rights Reserved</span>
+ <button class="dl-btn" id="btn-dl">Download This Version</button>
+ </div>
+
+</div>
+<script>
+var VERSION = 30;
+
+/* -- DATA -- */
+var FISH = [
+ {id:'redfish', label:'Red Drum', icon:''},
+ {id:'speckled', label:'Speckled Trout', icon:''},
+ {id:'flounder', label:'Southern Flounder', icon:''},
+ {id:'blackdrum', label:'Black Drum', icon:''},
+ {id:'bluefish', label:'Bluefish', icon:''},
+ {id:'sheepshead', label:'Sheepshead', icon:''},
+ {id:'striper', label:'Striped Bass', icon:''},
+ {id:'cobia', label:'Cobia', icon:''},
+ {id:'spanish', label:'Spanish Mackerel', icon:''},
+ {id:'bonito', label:'Atlantic Bonito', icon:''},
+ {id:'dorado', label:'Dorado (Mahi-Mahi)', icon:''},
+ {id:'ahituna', label:'Ahi Tuna', icon:''},
+ {id:'bluemarlin', label:'Blue Marlin', icon:''},
+ {id:'spot', label:'Spot', icon:''}
+];
+var BIRDS = [
+ {id:'mallard', label:'Mallard Drake', icon:''},
+ {id:'pintail', label:'Northern Pintail', icon:''},
+ {id:'bwteal', label:'Blue-wing Teal', icon:''},
+ {id:'gwteal', label:'Green-wing Teal', icon:''},
+ {id:'bufflehead', label:'Bufflehead Drake', icon:''},
+ {id:'canvasback', label:'Canvasback Drake', icon:''},
+ {id:'redhead', label:'Redhead Drake', icon:''},
+ {id:'wigeon', label:'American Wigeon Drake', icon:''},
+ {id:'gadwall', label:'Gadwall Drake', icon:''},
+ {id:'osprey', label:'Osprey', icon:''},
+ {id:'brownpelican', label:'Brown Pelican', icon:''},
+ {id:'greatheron', label:'Great Blue Heron', icon:''},
+ {id:'egret', label:'Snowy Egret', icon:''}
+];
+var LANDMARKS = [
+ {id:'capelookout', label:'Cape Lookout Lighthouse', icon:'', desc:'iconic black-and-white diamond-pattern lighthouse, 163 feet tall, barrier island, Atlantic Ocean backdrop, Cape Lookout National Seashore'},
+ {id:'harkers', label:'Harkers Island', icon:'', desc:'small fishing village on Core Sound, wooden working waterfront, crab pots and fishing boats, marsh grasses, Down East Carolina coastal scene'},
+ {id:'shackleford', label:'Shackleford Banks', icon:'', desc:'uninhabited barrier island, wild Colonial Spanish mustang horses on the beach, Atlantic shoreline, sea oats and dunes'},
+ {id:'beaufort', label:'Beaufort Waterfront', icon:'', desc:'historic Beaufort NC waterfront, wooden dock, pelicans and sailboats, Taylors Creek, classic Down East scene'},
+ {id:'radioisland', label:'Radio Island / Beaufort Inlet', icon:'', desc:'Beaufort Inlet waterway, boats passing through channel, coastal marsh and open water, Cape Lookout in far background'},
+ {id:'fortmacon', label:'Fort Macon', icon:'', desc:'historic 1834 Civil War era coastal fort, brick pentagon-shaped masonry fort, Atlantic Beach NC, grassy ramparts and arched casemates'},
+ {id:'currituck', label:'Currituck Beach Lighthouse', icon:'', desc:'unpainted red brick lighthouse, 162 feet tall, Corolla NC, maritime forest and dunes, Currituck Sound in background'},
+ {id:'bodie', label:'Bodie Island Lighthouse', icon:'', desc:'black and white horizontal band pattern lighthouse, 156 feet tall, Cape Hatteras National Seashore, freshwater pond in foreground'},
+ {id:'hatteras', label:'Cape Hatteras Lighthouse', icon:'', desc:'tallest brick lighthouse in America at 198 feet, bold black and white diagonal spiral stripe, Buxton NC, iconic Outer Banks landmark'},
+ {id:'ocracoke', label:'Ocracoke Lighthouse', icon:'', desc:'short squat white-painted lighthouse, 75 feet tall, oldest operating lighthouse in NC, Ocracoke Island, whitewashed brick'},
+ {id:'roanoke', label:'Roanoke Marshes Lighthouse', icon:'', desc:'small white cottage-style screw-pile lighthouse replica, Manteo NC waterfront, Croatan Sound, calm water and marsh grasses'}
+];
+var STYLES = [
+ {id:'wpa', name:'National Park Poster', desc:'WPA/1950s flat bold silhouettes, 4-6 color palette, clean graphic'},
+ {id:'lodge', name:"Sportsman's Lodge", desc:'Mid-century lure box & catalog art, painterly earthy tones, confident brushwork'},
+ {id:'gyotaku', name:'Gyotaku / Woodblock', desc:'Japanese fish printing tradition, bold outlines, flat fills, minimal shading'},
+ {id:'decal', name:'Travel Decal / Souvenir', desc:'Oval badge with retro typography, luggage sticker style, 1950s souvenir'},
+ {id:'mcm', name:'Mid-Century Modern', desc:'Vintage Audubon meets Mad Men, stylized naturalistic, warm limited palette'},
+ {id:'screenprint', name:'Screen Print / Linocut', desc:'Hand-printed texture, 2-3 color, bold graphic, visible grain'},
+ {id:'truecolor', name:'True Color Illustration', desc:'Naturalistic, accurate real-world colors and markings, painterly not photographic'},
+ {id:'watercolor', name:'Watercolor', desc:'Soft wet-on-wet washes, natural color blooms, delicate edges, translucent pigment'},
+ {id:'linedrawing', name:'Line Drawing', desc:'Medium-weight black ink outlines, realistic color fills, premium field guide style'}
+];
+var SHAPES = [
+ {id:'rect', label:'Landscape\n2100 x 1500px'},
+ {id:'portrait', label:'Portrait\n1500 x 2100px'},
+ {id:'round', label:'Round\n1500 x 1500px'},
+ {id:'square', label:'Square\n1500 x 1500px'}
+];
+var EXTRAS = [
+ {id:'showname', label:'Include subject name as text'},
+ {id:'loc_harkers', label:'Text: "Harkers Island, NC"'},
+ {id:'loc_beaufort', label:'Text: "Beaufort, NC"'},
+ {id:'loc_coresound', label:'Text: "Core Sound, NC"'},
+ {id:'worn', label:'Aged / weathered texture'},
+ {id:'water', label:'Water / marsh background'},
+ {id:'whitebg', label:'Clean white background'},
+ {id:'notext', label:'No text - illustration only'}
+];
+var STYLE_PROMPTS = {
+ wpa: {prefix:'WPA National Park poster style illustration', detail:'flat bold graphic silhouette, strong confident shapes, limited palette of exactly 5 colors, clean vector-like areas with no gradients, bold outlines defining forms, dynamic poster art composition, authentic 1930s-1950s U.S. government travel poster aesthetic, high contrast between color fields', palette:'muted earthy poster palette of deep teal, burnt sienna, warm cream, forest green, and navy blue - each color flat and solid'},
+ lodge: {prefix:'vintage mid-century sporting goods illustration', detail:'painterly brushstroke quality with confident loose linework, warm earthy tones, authentic old fishing lure box and sporting catalog art from the 1940s-60s, slightly irregular hand-painted edges, rich paint feel, the art found on vintage tackle boxes and Field & Stream covers', palette:'warm palette of tobacco brown, olive green, aged cream, russet orange, and slate blue - all slightly desaturated as if printed on old paper'},
+ gyotaku: {prefix:'traditional Japanese gyotaku fish print style illustration', detail:'bold sumi ink outlines with expressive brushwork, flat color fills with minimal shading, strong graphic contrast, authentic gyotaku fish printing tradition, woodblock print quality with hand-carved feel, ukiyo-e compositional influences, visible texture suggesting rice paper or washi', palette:'limited palette of sumi ink black, vermilion red, deep cobalt blue, warm ivory, and sea foam green - applied as flat washes in traditional Japanese print style'},
+ decal: {prefix:'vintage 1950s travel souvenir decal and luggage sticker design', detail:'oval or shield badge-shaped composition with strong border treatment, retro sans-serif and script typography seamlessly integrated into the design, clean flat color fills with bold graphic shapes, the look of a 1950s tourist shop souvenir found on old suitcases and travel trunks', palette:'bold limited palette of exactly 4 colors: deep navy, bright red, warm gold, and clean white - high contrast as vintage lithography'},
+ mcm: {prefix:'mid-century modern natural history illustration', detail:'vintage Audubon Society field guide meets 1960s Madison Avenue graphic design, stylized but biologically naturalistic, confident clean lines with elegant negative space, slightly abstracted organic shapes with a sophisticated editorial quality, warmth of a 1960s National Geographic illustration combined with modernist graphic sensibility', palette:'sophisticated mid-century palette of sage green, terracotta, warm grey, ivory, and charcoal'},
+ screenprint: {prefix:'vintage screen print and linocut style illustration', detail:'authentic hand-printed appearance with visible ink texture and deliberate slight color registration variation between layers, 2-3 color maximum, bold graphic shapes with slightly rough hand-cut edges, authentic relief print aesthetic as if carved from linoleum and hand-pressed, visible ink bleed and grain texture', palette:'raw limited 2-3 color palette with visible halftone dots or wood grain texture printed over aged cream paper stock'},
+ truecolor: {prefix:'naturalistic wildlife art illustration', detail:'accurate true-to-life colors and field markings rendered with artistic confidence, painterly illustration style with visible brushwork and surface texture, highly detailed but clearly illustrative rather than photographic, the quality of a premium wildlife art print, strong sense of the animal personality and natural behavior, expert rendering of scales, feathers, or fur texture', palette:'full accurate natural color palette true to the real species - every color and marking scientifically correct, rendered with artistic warmth and depth'},
+ watercolor: {prefix:'watercolor painting illustration', detail:'luminous soft wet-on-wet watercolor washes with beautiful natural pigment blooms and bleeds at edges, translucent layered color building depth, delicate soft feathered edges where paint meets paper, visible cold-press paper texture showing through washes, loose and expressive yet controlled professional brushwork, light and airy overall feel', palette:'natural true-to-life watercolor palette with soft luminous washes - accurate species colors rendered with the transparency and glow unique to watercolor pigment'},
+ linedrawing: {prefix:'detailed ink line drawing illustration with color', detail:'clean confident medium-weight black ink outlines throughout with completely consistent line weight, no thick-thin variation, realistic accurate color fills within the ink linework, flat to very slightly graduated color, the precise quality of a premium nature field guide or scientific natural history illustration, crisp and authoritative', palette:'realistic natural color palette accurate to the real subject - clean true-to-life colors filling the ink linework with flat precision'}
+};
+var SHAPE_PROMPTS = {
+ rect: 'horizontal landscape rectangular composition at 2100x1500px (wider than tall), full bleed solid color background extending to all edges, no border frames or outlines near edges, subject well centered',
+ portrait: 'vertical portrait rectangular composition at 1500x2100px (taller than wide), full bleed solid color background extending to all edges, no border frames or outlines near edges, subject well centered',
+ round: 'circular round magnet design, canvas size 1500x1500px - the entire composition is circular, subject centered within the circular format, solid color background fills the circle, this is a ROUND CIRCULAR design, composition optimized for circular crop with subject well inside the circular boundary',
+ square: 'square composition 1500x1500px (equal width and height), full bleed solid color background extending to all four edges, no border frames or outlines near edges, subject well centered'
+};
+var SPECIES_DETAILS = {
+ redfish: {name:'Red Drum (Redfish)', desc:'large copper-bronze fish, distinctive black spot at tail base, broad shoulders, downturned mouth'},
+ speckled: {name:'Speckled Trout', desc:'slender silver fish, bold black spots across back, elongated predator profile'},
+ flounder: {name:'Southern Flounder', desc:'flat oval-bodied fish, both eyes on one side, mottled brown camouflage'},
+ blackdrum: {name:'Black Drum', desc:'deep-bodied silver-grey fish, faint vertical bars, barbels under chin, powerful profile'},
+ bluefish: {name:'Bluefish', desc:'streamlined aggressive fish, greenish-blue back, white belly, prominent jaw with sharp teeth'},
+ sheepshead: {name:'Sheepshead', desc:'deep-bodied fish, bold black and white vertical stripes, human-like teeth, spiny dorsal'},
+ striper: {name:'Striped Bass', desc:'large silver fish, 7-8 bold horizontal dark stripes running full body length'},
+ cobia: {name:'Cobia', desc:'long torpedo-shaped fish, dark brown back fading to white belly, broad flat head, lateral white stripes'},
+ spanish: {name:'Spanish Mackerel', desc:'streamlined iridescent fish, golden-yellow spots along sides, forked tail, fast predator profile'},
+ bonito: {name:'Atlantic Bonito', desc:'streamlined tuna-shaped fish, oblique dark stripes on back, silver belly, deeply forked tail'},
+ dorado: {name:'Dorado (Mahi-Mahi)', desc:'vibrant fish, brilliant gold-green-blue iridescent body, blunt forehead, long dorsal fin, deeply forked tail'},
+ ahituna: {name:'Ahi Tuna (Yellowfin)', desc:'large torpedo-shaped fish, dark metallic blue-black back, silver belly, bright yellow finlets'},
+ bluemarlin: {name:'Blue Marlin', desc:'massive billfish, long spear-like bill, cobalt-blue back with silver belly, tall crescent dorsal fin'},
+ spot: {name:'Spot', desc:'small panfish, distinctive black spot behind gill plate, golden-bronze sides, subtle lateral stripes'},
+ mallard: {name:'Mallard Drake', desc:'iridescent emerald green head, white collar ring, chestnut chest, grey body, yellow bill'},
+ pintail: {name:'Northern Pintail Drake', desc:'chocolate-brown head, white neck stripe, long elegant tail pin feathers'},
+ bwteal: {name:'Blue-winged Teal Drake', desc:'slate-blue head, white crescent facial patch, brown speckled body, iridescent wing patch'},
+ gwteal: {name:'Green-winged Teal Drake', desc:'chestnut head, broad iridescent green eye patch, grey body with vertical white shoulder bar'},
+ bufflehead: {name:'Bufflehead Drake', desc:'large iridescent purple-green head, dramatic white patch behind eye, black and white body'},
+ canvasback: {name:'Canvasback Drake', desc:'rich russet-red head and neck, black chest, white body, long sloping profile'},
+ redhead: {name:'Redhead Drake', desc:'rounded bright russet-red head, black chest, grey body, blue-grey bill with black tip'},
+ wigeon: {name:'American Wigeon Drake', desc:'cream forehead stripe, iridescent green eye patch, pinkish-brown body, white wing patch'},
+ gadwall: {name:'Gadwall Drake', desc:'intricate grey vermiculated body, black rump patch, chestnut wing panels, white speculum'},
+ osprey: {name:'Osprey', desc:'large fish hawk, brown back, white underparts, distinctive dark eye stripe, wings in M-shape'},
+ brownpelican: {name:'Brown Pelican', desc:'long bill and pouch, brown body, yellow head, soaring or plunge-diving pose'},
+ greatheron: {name:'Great Blue Heron', desc:'tall wading bird, blue-grey plumage, white face, long black plume, yellow bill, elegant S-curve neck'},
+ egret: {name:'Snowy Egret', desc:'all-white plumage, black legs with bright yellow feet, black bill, breeding plumes'}
+};
+
+/* -- STATE -- */
+var SEL = { species: null, landmark: null, style: null, shape: null, extras: {} };
+
+/* -- BUILDERS -- */
+function buildSubject(gridId, items, key) {
+ var grid = document.getElementById(gridId);
+ for (var i = 0; i < items.length; i++) {
+ (function(item) {
+ var b = document.createElement('button');
+ b.className = 'btn-subject';
+ b.type = 'button';
+ b.innerHTML = '<span class="dot"></span>' + item.icon + ' ' + item.label;
+ b.onclick = function() {
+ SEL.species = null; SEL.landmark = null;
+ var all = document.querySelectorAll('.btn-subject');
+ for (var j = 0; j < all.length; j++) all[j].classList.remove('on');
+ SEL[key] = item.id;
+ b.classList.add('on');
+ };
+ grid.appendChild(b);
+ })(items[i]);
+ }
+}
+
+function buildStyles() {
+ var grid = document.getElementById('style-grid');
+ for (var i = 0; i < STYLES.length; i++) {
+ (function(s) {
+ var b = document.createElement('button');
+ b.className = 'btn-style';
+ b.type = 'button';
+ b.innerHTML = '<span class="sname">' + s.name + '</span><span class="sdesc">' + s.desc + '</span>';
+ b.onclick = function() {
+ var all = document.querySelectorAll('.btn-style');
+ for (var j = 0; j < all.length; j++) all[j].classList.remove('on');
+ SEL.style = s.id;
+ b.classList.add('on');
+ };
+ grid.appendChild(b);
+ })(STYLES[i]);
+ }
+}
+
+function buildShapes() {
+ var grid = document.getElementById('shape-grid');
+ for (var i = 0; i < SHAPES.length; i++) {
+ (function(s) {
+ var b = document.createElement('button');
+ b.className = 'btn-shape';
+ b.type = 'button';
+ b.innerHTML = s.label.replace('\n', '<br>');
+ b.onclick = function() {
+ var all = document.querySelectorAll('.btn-shape');
+ for (var j = 0; j < all.length; j++) all[j].classList.remove('on');
+ SEL.shape = s.id;
+ b.classList.add('on');
+ };
+ grid.appendChild(b);
+ })(SHAPES[i]);
+ }
+}
+
+function buildExtras() {
+ var grid = document.getElementById('extras-grid');
+ for (var i = 0; i < EXTRAS.length; i++) {
+ (function(item) {
+ var b = document.createElement('button');
+ b.className = 'btn-extra';
+ b.type = 'button';
+ b.innerHTML = '<span class="cbox"></span>' + item.label;
+ b.onclick = function() {
+ if (SEL.extras[item.id]) {
+ delete SEL.extras[item.id];
+ b.classList.remove('on');
+ b.querySelector('.cbox').textContent = '';
+ } else {
+ SEL.extras[item.id] = true;
+ b.classList.add('on');
+ b.querySelector('.cbox').textContent = 'X';
+ }
+ };
+ grid.appendChild(b);
+ })(EXTRAS[i]);
+ }
+}
+
+/* -- TOAST -- */
+function toast(msg) {
+ var old = document.getElementById('toast');
+ if (old) old.remove();
+ var t = document.createElement('div');
+ t.id = 'toast';
+ t.textContent = msg;
+ t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#b84c1e;color:#f5eedc;font-family:Oswald,sans-serif;font-size:0.9rem;letter-spacing:0.1em;padding:0.7rem 1.5rem;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,0.5);z-index:9999;pointer-events:none;white-space:nowrap;';
+ document.body.appendChild(t);
+ setTimeout(function() { t.style.transition='opacity 0.4s'; t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 400); }, 2000);
+}
+
+/* -- COPY -- */
+function copyEl(id, label) {
+ var text = document.getElementById(id).textContent;
+ if (navigator.clipboard && navigator.clipboard.writeText) {
+ navigator.clipboard.writeText(text).then(function(){ toast('X ' + label + ' copied!'); }).catch(function(){ fallback(text, label); });
+ } else { fallback(text, label); }
+}
+function fallback(text, label) {
+ var ta = document.createElement('textarea');
+ ta.value = text; ta.style.cssText = 'position:fixed;opacity:0.01;top:0;left:0;width:1px;height:1px;';
+ document.body.appendChild(ta); ta.focus(); ta.select();
+ var ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+ document.body.removeChild(ta);
+ toast(ok ? 'X ' + label + ' copied!' : 'Select text and press Ctrl+C');
+}
+
+/* -- Download This Version -- */
+function dl() {
+ var decoded = atob(SRC_B64);
+ var a = document.createElement('a');
+ a.href = URL.createObjectURL(new Blob([decoded], {type:'text/html;charset=utf-8'}));
+ a.download = 'core-sound-magnet-prompt-generator-V' + VERSION + '.html';
+ document.body.appendChild(a); a.click(); document.body.removeChild(a);
+ setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+ toast('Downloaded as V' + VERSION + '!');
+}
+
+/* -- Generate Prompt -- */
+function generate() {
+ var old = document.getElementById('err');
+ if (old) old.remove();
+
+ var hasSub = SEL.species || SEL.landmark;
+ if (!hasSub || !SEL.style) {
+ var msg = (!hasSub && !SEL.style) ? '! Please select a subject and an art style'
+ : !hasSub ? '! Please select a species or landmark'
+ : '! Please select an art style';
+ var err = document.createElement('div');
+ err.id = 'err';
+ err.style.cssText = 'background:#b84c1e;color:#f5eedc;font-family:Oswald,sans-serif;font-size:0.85rem;letter-spacing:0.1em;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;text-align:center;';
+ err.textContent = msg;
+ var gb = document.getElementById('gen-btn');
+ gb.parentNode.insertBefore(err, gb);
+ err.scrollIntoView({behavior:'smooth', block:'center'});
+ return;
+ }
+
+ var st = STYLE_PROMPTS[SEL.style];
+ var sh = SHAPE_PROMPTS[SEL.shape];
+ var ex = SEL.extras;
+
+ var shapeLabel = '', styleLabel = '';
+ for (var i = 0; i < SHAPES.length; i++) { if (SHAPES[i].id === SEL.shape) { shapeLabel = SHAPES[i].label.split('\n')[0]; break; } }
+ for (var i = 0; i < STYLES.length; i++) { if (STYLES[i].id === SEL.style) { styleLabel = STYLES[i].name; break; } }
+
+ var subjectName, subjectPrefix;
+ if (SEL.species) {
+ var sp = SPECIES_DETAILS[SEL.species];
+ subjectName = sp.name;
+ subjectPrefix = st.prefix + ' of a ' + sp.name + ' (' + sp.desc + ')';
+ } else {
+ var lm = null;
+ for (var i = 0; i < LANDMARKS.length; i++) { if (LANDMARKS[i].id === SEL.landmark) { lm = LANDMARKS[i]; break; } }
+ subjectName = lm.label;
+ subjectPrefix = st.prefix + ' of ' + lm.label + ' - ' + lm.desc;
+ }
+
+ // Optional extras
+ var bgStr = ex['water'] ? ' Include a simplified marsh and tidal flat waterscape background behind the subject.' : '';
+ var wornStr = ex['worn'] ? ' Apply aged and weathered paper texture with slight color fading throughout, as if printed decades ago.' : '';
+ var whitebgStr= ex['whitebg'] ? ' Pure clean white background, subject isolated cleanly on white, no background scenery.' : '';
+
+ // Text options
+ var locStr = '';
+ var nameStr = '';
+ if (ex['loc_harkers']) locStr = ' IMPORTANT: The text "Harkers Island, NC" must appear in bold retro typography centered directly below the subject.';
+ else if (ex['loc_beaufort']) locStr = ' IMPORTANT: The text "Beaufort, NC" must appear in bold retro typography centered directly below the subject.';
+ else if (ex['loc_coresound']) locStr = ' IMPORTANT: The text "Core Sound, NC" must appear in bold retro typography centered directly below the subject.';
+ if (ex['showname'] && SEL.species) nameStr = ' IMPORTANT: The species name "' + subjectName + '" must appear in bold retro typography centered directly above the subject.';
+
+ // No-text overrides all text
+ var notextStr = '';
+ if (ex['notext']) {
+ locStr = '';
+ nameStr = '';
+ notextStr = ' NO TEXT WHATSOEVER - illustration only. Do not include any lettering, words, labels, or typography of any kind.';
+ }
+
+ var PRINT = ex['whitebg']
+ ? 'TECHNICAL: Pure solid white background extending completely to all four edges. No border lines, frames, decorative edges, vignettes, drop shadows, or halos. Subject well centered. Flat graphic illustration only - not photorealistic. 300dpi.'
+ : 'TECHNICAL: Full bleed solid color background extending completely to all four edges with no gaps. No border lines, frames, vignettes, or edge shadows. Subject well centered. Flat graphic illustration only - not photorealistic. 300dpi.';
+
+ var prompt = subjectPrefix + ', designed as a ' + sh + '.\n\nSTYLE: ' + st.detail + '.\n\nCOLOR: ' + st.palette + '.' + bgStr + wornStr + whitebgStr + notextStr + locStr + nameStr + '\n\n' + PRINT;
+ var neg = ex['whitebg']
+ ? 'colored background, gradient, border, frame, vignette, drop shadow, photorealistic, 3D render, bokeh, photograph, watermark, neon colors, cartoon, clipart'
+ : 'border, frame, edge lines, white background, vignette, drop shadow near edge, photorealistic, 3D render, bokeh, photograph, watermark, neon colors, cartoon, clipart';
+
+ var trimmed = prompt.trim();
+ document.getElementById('out-badge').textContent = subjectName + ' - ' + styleLabel + ' - ' + shapeLabel;
+ document.getElementById('out-text').textContent = trimmed;
+ document.getElementById('neg-text').textContent = neg;
+
+ var cc = document.getElementById('out-cc');
+ cc.textContent = trimmed.length.toLocaleString() + ' / 5,000 chars';
+ cc.className = 'cc ' + (trimmed.length > 5000 ? 'over' : trimmed.length > 4500 ? 'warn' : 'ok');
+
+ var panel = document.getElementById('out-panel');
+ panel.classList.add('show');
+ panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* -- INIT -- */
+buildSubject('fish-grid', FISH, 'species');
+buildSubject('bird-grid', BIRDS, 'species');
+buildSubject('landmark-grid', LANDMARKS, 'landmark');
+buildStyles();
+buildShapes();
+buildExtras();
+
+document.getElementById('gen-btn').onclick = generate;
+document.getElementById('btn-copy-p').onclick = function(){ copyEl('out-text', 'Prompt'); };
+document.getElementById('btn-copy-n').onclick = function(){ copyEl('neg-text', 'Negative prompt'); };
+document.getElementById('btn-regen').onclick = generate;
+document.getElementById('btn-dl').onclick = dl;
+</script>
+</body>
+</html>
